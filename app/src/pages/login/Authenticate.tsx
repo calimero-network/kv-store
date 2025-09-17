@@ -1,87 +1,179 @@
-import React from 'react';
-import {
-  clearAccessToken,
-  ClientLogin,
-} from '@calimero-network/calimero-client';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { styled } from 'styled-components';
-import ContentWrapper from '../../components/login/ContentWrapper';
-
-const Wrapper = styled.div`
-  display: flex;
-  width: 100%;
-  height: 100vh;
-  background-color: #111111;
-  position: relative;
-
-  .back-button {
-    height: fit-content;
-    color: white;
-    padding: 1rem;
-    cursor: pointer;
-  }
-
-  .flex-wrapper {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .title-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.75rem;
-    padding-left: 3.5rem;
-    padding-right: 3.5rem;
-  }
-
-  .title {
-    color: white;
-    font-size: 24px;
-    font-weight: bold;
-  }
-
-  .card {
-    background-color: #1c1c1c;
-    padding: 2rem;
-    border-radius: 0.5rem;
-  }
-
-  .context-button {
-    cursor: pointer;
-  }
-`;
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Button,
+  Grid,
+  GridItem,
+  Navbar as MeroNavbar,
+  NavbarBrand,
+  NavbarMenu,
+  NavbarItem,
+} from '@calimero-network/mero-ui';
+import {
+  useCalimero,
+  CalimeroConnectButton,
+  ConnectionType,
+} from '@calimero-network/calimero-client';
+import translations from '../../constants/en.global.json';
 
 export default function Authenticate() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useCalimero();
 
-  function onSetupClick() {
-    clearAccessToken();
-    navigate('/');
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/home');
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
-    <ContentWrapper>
-      <Wrapper>
-        <div className="flex-wrapper">
-          <div className="card">
-            <div className="title-wrapper">
-              <div className="title">KV Store</div>
-            </div>
-            <ClientLogin sucessRedirect={() => navigate('/home')} />
-          </div>
-          <div className="back-button" onClick={onSetupClick}>
-            Return to setup
-          </div>
-          <div className="context-button" onClick={() => navigate('/context')}>
-            Go to context actions
-          </div>
-        </div>
-      </Wrapper>
-    </ContentWrapper>
+    <>
+      <MeroNavbar variant="elevated" size="md">
+        <NavbarBrand text="KV Store" />
+        <NavbarMenu align="right">
+          <NavbarItem>
+            <CalimeroConnectButton
+              connectionType={{
+                type: ConnectionType.Custom,
+                url: 'http://node1.127.0.0.1.nip.io',
+              }}
+            />
+          </NavbarItem>
+        </NavbarMenu>
+      </MeroNavbar>
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor: '#111111',
+          color: 'white',
+        }}
+      >
+        <Grid
+          columns={12}
+          gap={16}
+          maxWidth="100%"
+          justify="center"
+          align="center"
+        >
+          <GridItem colSpan={10} colStart={2}>
+            <main
+              style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '80vh',
+              }}
+            >
+              <div style={{ width: '100%', maxWidth: '1000px' }}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      {translations.auth.description.subtitle}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <p
+                        style={{
+                          color: '#ccc',
+                          marginBottom: '1rem',
+                          fontSize: '0.9em',
+                        }}
+                      >
+                        {translations.home.demoDescription}
+                      </p>
+                      <p
+                        style={{
+                          color: '#888',
+                          marginBottom: '1.5rem',
+                          fontSize: '0.85em',
+                        }}
+                      >
+                        {translations.home.calimeroIntro}
+                      </p>
+                      <h3
+                        style={{
+                          color: 'white',
+                          marginBottom: '0.75rem',
+                          fontSize: '0.9em',
+                        }}
+                      >
+                        Features:
+                      </h3>
+                      <ul
+                        style={{
+                          color: '#ccc',
+                          lineHeight: '1.4',
+                          paddingLeft: '1rem',
+                          fontSize: '0.85em',
+                        }}
+                      >
+                        {translations.auth.description.features.map(
+                          (feature, index) => (
+                            <li key={index} style={{ marginBottom: '0.25rem' }}>
+                              {feature}
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: '1.5rem',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          window.open(
+                            'https://docs.calimero.network',
+                            '_blank',
+                            'noopener,noreferrer',
+                          )
+                        }
+                      >
+                        {translations.home.documentation}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          window.open(
+                            'https://github.com/calimero-network',
+                            '_blank',
+                            'noopener,noreferrer',
+                          )
+                        }
+                      >
+                        {translations.home.github}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          window.open(
+                            'https://calimero.network',
+                            '_blank',
+                            'noopener,noreferrer',
+                          )
+                        }
+                      >
+                        {translations.home.website}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </main>
+          </GridItem>
+        </Grid>
+      </div>
+    </>
   );
 }

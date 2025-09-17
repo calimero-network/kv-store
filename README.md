@@ -1,38 +1,30 @@
 # KV Store - Demo application
 
-## Logic
+## Logic (Rust)
 
-```bash title="Terminal"
-cd logic
+```bash
+pnpm run logic:build
 ```
 
-```bash title="Terminal"
-chmod +x ./build.sh
+Optional cleanup:
+
+```bash
+pnpm run logic:clean
 ```
 
-```bash title="Terminal"
-./build.sh
+## App (React)
+
+```bash
+cd app && pnpm install
 ```
 
-## App
+Build and run:
 
-```bash title="Terminal"
-cd app
+```bash
+pnpm --dir app build
+pnpm --dir app dev
 ```
 
-```bash title="Terminal"
-pnpm install
-```
+Open the app in your browser and connect to a running node.
 
-```bash title="Terminal"
-pnpm build
-```
-
-```bash title="Terminal"
-pnpm dev
-```
-
-Open app in browser and connect to running node.
-
-For more information how to build app check our docs:
-https://calimero-network.github.io/build/quickstart
+Docs: https://calimero-network.github.io/build/quickstart
