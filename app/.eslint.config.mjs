@@ -29,6 +29,16 @@ export default defineConfig({
   },
   plugins: ['@typescript-eslint', 'react-refresh'],
   rules: {
+    // Prefer TS-aware unused var checks
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
+    ],
     'react/jsx-no-target-blank': 'off',
     'react/jsx-uses-react': 'error',
     'react/jsx-uses-vars': 'error',

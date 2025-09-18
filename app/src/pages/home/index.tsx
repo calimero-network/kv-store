@@ -1,306 +1,301 @@
-import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import {
+  Button,
+  Input,
+  Table,
+  Navbar as MeroNavbar,
+  NavbarBrand,
+  NavbarMenu,
+  NavbarItem,
+  Grid,
+  GridItem,
+} from '@calimero-network/mero-ui';
+import { Trash } from '@calimero-network/mero-icons';
+import translations from '../../constants/en.global.json';
 import { useNavigate } from 'react-router-dom';
 import {
-  clientLogout,
-  getAccessToken,
-  getAppEndpointKey,
-  getApplicationId,
-  getContextId,
-  getRefreshToken,
-  NodeEvent,
-  ResponseData,
-  SubscriptionsClient,
+  useCalimero,
+  CalimeroConnectButton,
+  ConnectionType,
 } from '@calimero-network/calimero-client';
-
-import {
-  ClientApiDataSource,
-  getWsSubscriptionsClient,
-} from '../../api/dataSource/ClientApiDataSource';
-import { EntriesResponse } from '../../api/clientApi';
-import deleteIcon from '../../assets/delete.svg';
-
-const FullPageCenter = styled.div`
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  background-color: #111111;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-`;
-
-const TextStyle = styled.div`
-  color: white;
-  margin-bottom: 2em;
-  font-size: 2em;
-`;
-
-const Button = styled.div`
-  color: white;
-  padding: 0.25em 1em;
-  border-radius: 8px;
-  font-size: 1em;
-  background: #5dbb63;
-  cursor: pointer;
-  justify-content: center;
-  display: flex;
-`;
-
-const ButtonReset = styled.div`
-  color: white;
-  padding: 0.25em 1em;
-  border-radius: 8px;
-  font-size: 1em;
-  background: #ffa500;
-  cursor: pointer;
-  justify-content: center;
-  display: flex;
-  margin-top: 1rem;
-`;
-
-const LogoutButton = styled.div`
-  color: black;
-  margin-top: 2rem;
-  padding: 0.25em 1em;
-  border-radius: 8px;
-  font-size: 1em;
-  background: white;
-  cursor: pointer;
-  justify-content: center;
-  display: flex;
-`;
-
-const AddEntryContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 1em;
-  margin-bottom: 1em;
-`;
-
-const EntriesContainer = styled.div`
-  height: 300px;
-  overflow-y: scroll;
-  width: 100%;
-  max-width: 500px;
-  background: #222;
-  border-radius: 8px;
-  padding: 1em;
-  margin-bottom: 1em;
-`;
-
-const EntriesHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5em 0;
-  border-bottom: 2px solid #444;
-  color: #bbb;
-  font-weight: bold;
-  font-size: 1.1em;
-  letter-spacing: 0.05em;
-`;
-
-const EntryRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5em 0;
-  border-bottom: 1px solid #333;
-  color: white;
-`;
-
-const DeleteButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  margin-left: 1em;
-  display: flex;
-  align-items: center;
-`;
-
-const NoEntries = styled.div`
-  color: #aaa;
-`;
-
-const Input = styled.input`
-  font-size: 1em;
-  padding: 0.5em;
-  border-radius: 4px;
-`;
-
-const ActionsRow = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: 2rem;
-  margin-top: 0.5rem;
-  justify-content: center;
-`;
+import { createKvClient, AbiClient } from '../../features/kv/api';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const url = getAppEndpointKey();
-  const applicationId = getApplicationId();
-  const accessToken = getAccessToken();
-  const refreshToken = getRefreshToken();
+  const { isAuthenticated, logout, app } = useCalimero();
   const [key, setKey] = useState<string>('');
   const [value, setValue] = useState<string>('');
   const [entries, setEntries] = useState<any[]>([]);
+  const [api, setApi] = useState<AbiClient | null>(null);
+  const loadingEntriesRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (!url || !applicationId || !accessToken || !refreshToken) {
-      navigate('/auth');
+    if (!isAuthenticated) {
+      navigate('/');
     }
-  }, [accessToken, applicationId, navigate, refreshToken, url]);
+  }, [isAuthenticated, navigate]);
 
-  async function setEntry() {
+  // Create API client when app is available
+  useEffect(() => {
+    if (!app) return;
+
+    const initializeApi = async () => {
+      try {
+        const client = await createKvClient(app);
+        setApi(client);
+      } catch (error) {
+        console.error('Failed to create API client:', error);
+        window.alert('Failed to initialize API client');
+      }
+    };
+
+    initializeApi();
+  }, [app]);
+
+  const getEntries = useCallback(async () => {
+    if (loadingEntriesRef.current || !api) return;
+    loadingEntriesRef.current = true;
     try {
-      const result = await new ClientApiDataSource().setEntry({
-        key: key,
-        value: value,
-      });
-      if (result?.error) {
-        console.error('Error:', result.error);
-        window.alert(`${result.error.message}`);
-        return;
-      }
-      // @ts-ignore
-      if (result?.data.data == null) {
-        window.alert('Entry set successfully');
-      }
-      await getEntries();
-    } catch (e) {
-      console.error('Error:', e);
-      window.alert(`${e}`);
+      const data = await api.entries();
+      const entriesArray = Object.entries(data).map(([k, v]) => ({
+        key: k,
+        value: v,
+      }));
+      setEntries(entriesArray);
+    } catch (error) {
+      console.error('getEntries error:', error);
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : translations.home.errors.loadFailed,
+      );
+    } finally {
+      loadingEntriesRef.current = false;
     }
-  }
+  }, [api]);
 
-  async function getEntries() {
-    const result: ResponseData<EntriesResponse> =
-      await new ClientApiDataSource().entries();
-    if (result?.error) {
-      console.error('Error:', result.error);
-      window.alert(`${result.error.message}`);
-      return;
-    }
-    const entriesArray = result.data
-      ? Object.entries(result.data).map(([key, value]) => ({ key, value }))
-      : [];
-    setEntries(entriesArray);
-  }
-
-  async function resetEntries() {
-    const result: ResponseData<string> =
-      await new ClientApiDataSource().clear();
-    if (result?.error) {
-      console.error('Error:', result.error);
-      window.alert(`${result.error.message}`);
-      return;
-    }
-    await getEntries();
-  }
-
-  async function handleRemoveEntry(entryKey: string) {
+  const setEntry = useCallback(async () => {
+    if (!api) return;
     try {
-      const result = await new ClientApiDataSource().removeEntry(entryKey);
-      if (result?.error) {
-        console.error('Error:', result.error);
-        window.alert(`${result.error.message}`);
-        return;
-      }
+      await api.set({ key, value });
       await getEntries();
-    } catch (e) {
-      console.error('Error:', e);
-      window.alert(`${e}`);
+    } catch (error) {
+      console.error('setEntry error:', error);
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : translations.home.errors.setFailed,
+      );
     }
-  }
+  }, [api, key, value, getEntries]);
+
+  const resetEntries = useCallback(async () => {
+    if (!api) return;
+    try {
+      await api.clear();
+      await getEntries();
+    } catch (error) {
+      console.error('resetEntries error:', error);
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : translations.home.errors.clearFailed,
+      );
+    }
+  }, [api, getEntries]);
+
+  const handleRemoveEntry = useCallback(
+    async (entryKey: string) => {
+      if (!api) return;
+      try {
+        await api.remove({ key: entryKey });
+        await getEntries();
+      } catch (error) {
+        console.error('removeEntry error:', error);
+        window.alert(
+          error instanceof Error
+            ? error.message
+            : translations.home.errors.removeFailed,
+        );
+      }
+    },
+    [api, getEntries],
+  );
 
   useEffect(() => {
-    if (accessToken) {
+    if (isAuthenticated && api) {
       getEntries();
     }
-  }, [accessToken]);
+  }, [isAuthenticated, api, getEntries]);
 
-  const observeNodeEvents = async () => {
-    let subscriptionsClient: SubscriptionsClient = getWsSubscriptionsClient();
-    await subscriptionsClient.connect();
-    subscriptionsClient.subscribe([getContextId() ?? '']);
+  // Websocket event subscription removed; rely on manual refresh after mutations
 
-    subscriptionsClient?.addCallback((data: NodeEvent) => {
-      if (
-        'events' in data.data &&
-        Array.isArray(data.data.events) &&
-        data.data.events.length > 0
-      ) {
-        const event = data.data.events[0];
-        if (event.data && Array.isArray(event.data)) {
-          getEntries();
-        }
-      }
-    });
-  };
-
-  useEffect(() => {
-    observeNodeEvents();
-  }, []);
-
-  const logout = () => {
-    clientLogout();
+  const doLogout = useCallback(() => {
+    logout();
     navigate('/');
-  };
+  }, [logout, navigate]);
 
   return (
-    <FullPageCenter>
-      <TextStyle>
-        <span> Welcome to home page!</span>
-      </TextStyle>
-      <div style={{ marginBottom: '1em' }}>Add new entry</div>
-      <AddEntryContainer>
-        <Input
-          type="text"
-          placeholder="Key"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-        />
-        <Input
-          type="text"
-          placeholder="Value"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-        />
-        <Button onClick={setEntry}>Set Entry</Button>
-      </AddEntryContainer>
-      <EntriesContainer>
-        <EntriesHeader>
-          <span>Key</span>
-          <span>Value</span>
-          <span style={{ width: 24 }} />
-        </EntriesHeader>
-        {entries.length === 0 ? (
-          <NoEntries>No entries</NoEntries>
-        ) : (
-          entries.map((entry, idx) => (
-            <EntryRow key={idx}>
-              <span>{entry.key}</span>
-              <span>{entry.value}</span>
-              <DeleteButton
-                onClick={() => handleRemoveEntry(entry.key)}
-                title="Delete entry"
-              >
-                <img src={deleteIcon as unknown as string} alt="delete" />
-              </DeleteButton>
-            </EntryRow>
-          ))
-        )}
-      </EntriesContainer>
-      <ButtonReset onClick={resetEntries}>Reset Entries</ButtonReset>
-      <ActionsRow>
-        <LogoutButton onClick={() => navigate('/context')}>
-          Context Actions
-        </LogoutButton>
-        <LogoutButton onClick={logout}>Logout</LogoutButton>
-      </ActionsRow>
-    </FullPageCenter>
+    <>
+      <MeroNavbar variant="elevated" size="md">
+        <NavbarBrand text="KV Store" />
+        <NavbarMenu align="right">
+          {isAuthenticated ? (
+            <NavbarItem>
+              <Button variant="secondary" onClick={doLogout}>
+                Logout
+              </Button>
+            </NavbarItem>
+          ) : (
+            <NavbarItem>
+              <CalimeroConnectButton
+                connectionType={{
+                  type: ConnectionType.Custom,
+                  url: 'http://node1.127.0.0.1.nip.io',
+                }}
+              />
+            </NavbarItem>
+          )}
+        </NavbarMenu>
+      </MeroNavbar>
+      <div
+        style={{
+          minHeight: '100vh',
+          backgroundColor: '#111111',
+          color: 'white',
+        }}
+      >
+        <Grid
+          columns={1}
+          gap={32}
+          maxWidth="100%"
+          justify="center"
+          align="center"
+          style={{
+            minHeight: '100vh',
+            padding: '2rem',
+          }}
+        >
+          <GridItem>
+            <main
+              style={{
+                width: '100%',
+                maxWidth: '1200px',
+              }}
+            >
+              <div style={{ maxWidth: '800px', width: '100%' }}>
+                <div style={{ marginBottom: '1em', fontSize: '1.2em' }}>
+                  {translations.home.addEntry}
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setEntry();
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '1rem',
+                      marginBottom: '1rem',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <Input
+                      type="text"
+                      placeholder={translations.home.key}
+                      value={key}
+                      onChange={(e) => setKey(e.target.value)}
+                    />
+                    <Input
+                      type="text"
+                      placeholder={translations.home.value}
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      gap: '1rem',
+                      marginTop: '0.25rem',
+                    }}
+                  >
+                    <Button
+                      type="submit"
+                      variant="warning"
+                      style={{
+                        backgroundColor: '#5dbb63',
+                        color: '#111',
+                        flex: 1,
+                      }}
+                    >
+                      {translations.home.setEntry}
+                    </Button>
+                    <Button
+                      variant="error"
+                      onClick={resetEntries}
+                      style={{
+                        flex: 1,
+                      }}
+                    >
+                      {translations.home.resetEntries}
+                    </Button>
+                  </div>
+                </form>
+                {entries.length === 0 ? (
+                  <div
+                    style={{
+                      color: '#aaa',
+                      marginBottom: '1em',
+                      marginTop: '2rem',
+                    }}
+                  >
+                    {translations.home.noEntries}
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '2rem' }}>
+                    <Table
+                      columns={[
+                        { header: translations.home.key, key: 'key' },
+                        { header: translations.home.value, key: 'value' },
+                        {
+                          header: '',
+                          render: (_value: any, row: any) => (
+                            <button
+                              onClick={() => handleRemoveEntry(row.key)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#ef4444',
+                              }}
+                              title="Delete entry"
+                            >
+                              <Trash size={16} />
+                            </button>
+                          ),
+                          width: 96,
+                          align: 'right',
+                        },
+                      ]}
+                      data={entries}
+                      zebra
+                      compact
+                      stickyHeader
+                    />
+                  </div>
+                )}
+              </div>
+            </main>
+          </GridItem>
+        </Grid>
+      </div>
+    </>
   );
 }

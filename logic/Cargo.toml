@@ -9,8 +9,12 @@ crate-type = ["cdylib"]
 
 [dependencies]
 thiserror = "1.0.56"
-calimero-sdk = "0.2.5"
-calimero-storage = "0.2.5"
+calimero-sdk = { git = "https://github.com/calimero-network/core", branch = "master" }
+calimero-storage = { git = "https://github.com/calimero-network/core", branch = "master" }
+
+[build-dependencies]
+calimero-wasm-abi = { git = "https://github.com/calimero-network/core", branch = "master" }
+serde_json = "1.0.113"
 
 [profile.app-release]
 inherits = "release"

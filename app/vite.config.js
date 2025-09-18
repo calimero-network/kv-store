@@ -5,7 +5,7 @@ import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/kv-store/',
+  base: '/',
   build: {
     outDir: 'build',
     rollupOptions: {

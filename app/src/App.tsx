@@ -1,23 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, BrowserRouter } from 'react-router-dom';
-import { AccessTokenWrapper } from '@calimero-network/calimero-client';
+import { CalimeroProvider, AppMode } from '@calimero-network/calimero-client';
 
 import HomePage from './pages/home';
-import SetupPage from './pages/setup';
 import Authenticate from './pages/login/Authenticate';
-import ContextPage from './pages/context';
 
 export default function App() {
+  const [clientAppId] = useState<string>(
+    '8seLjoBTEZS9odraP9ePZvYCXEFw5bsbyyRxafXqrMEy',
+  );
+
   return (
-    <AccessTokenWrapper>
-      <BrowserRouter basename="/kv-store/">
+    <CalimeroProvider
+      clientApplicationId={clientAppId}
+      applicationPath={window.location.pathname || '/'}
+      mode={AppMode.MultiContext}
+    >
+      <BrowserRouter basename="/">
         <Routes>
-          <Route path="/" element={<SetupPage />} />
-          <Route path="/auth" element={<Authenticate />} />
+          <Route path="/" element={<Authenticate />} />
           <Route path="/home" element={<HomePage />} />
-          <Route path="/context" element={<ContextPage />} />
         </Routes>
       </BrowserRouter>
-    </AccessTokenWrapper>
+    </CalimeroProvider>
   );
 }
