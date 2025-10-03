@@ -5,8 +5,8 @@
   "type": "module",
   "dependencies": {
     "@calimero-network/calimero-client": "^1.19.2",
-    "@calimero-network/mero-icons": "^0.0.3",
-    "@calimero-network/mero-ui": "^0.2.0",
+    "@calimero-network/mero-icons": "^0.0.4",
+    "@calimero-network/mero-ui": "^0.3.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "axios": "^1.12.0",
