@@ -55,7 +55,6 @@ export class CalimeroBytes {
 /**
  * Convert CalimeroBytes instances to arrays for WASM compatibility
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function convertCalimeroBytesForWasm(obj: any): any {
   if (obj === null || obj === undefined) {
     return obj;
@@ -83,8 +82,7 @@ function convertCalimeroBytesForWasm(obj: any): any {
 /**
  * Convert arrays back to CalimeroBytes instances from WASM responses
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _convertWasmResultToCalimeroBytes(obj: any): any {
+function convertWasmResultToCalimeroBytes(obj: any): any {
   if (obj === null || obj === undefined) {
     return obj;
   }
@@ -94,13 +92,13 @@ function _convertWasmResultToCalimeroBytes(obj: any): any {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => _convertWasmResultToCalimeroBytes(item));
+    return obj.map((item) => convertWasmResultToCalimeroBytes(item));
   }
 
   if (typeof obj === 'object') {
     const result: any = {};
     for (const [key, value] of Object.entries(obj)) {
-      result[key] = _convertWasmResultToCalimeroBytes(value);
+      result[key] = convertWasmResultToCalimeroBytes(value);
     }
     return result;
   }
