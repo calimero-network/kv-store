@@ -1,7 +1,7 @@
 {
   "home": {
     "welcome": "Welcome to the Calimero KV Store Demo!",
-    "demoDescription": "This is a basic bootstrap demo application showcasing Calimero's key-value storage capabilities. It demonstrates how to build decentralized applications on the Calimero network.",
+    "demoDescription": "A powerful key-value storage application built on Calimero's P2P network. Store, retrieve, and manage your data with real-time synchronization across the network.",
     "calimeroIntro": "Calimero is a privacy-focused blockchain network that enables developers to build scalable, private applications. Our platform provides the infrastructure for creating decentralized applications with enhanced privacy and performance.",
     "learnMore": "Learn more about Calimero:",
     "documentation": "Documentation",
@@ -28,11 +28,11 @@
     "goToContext": "Go to context actions",
     "description": {
       "title": "Welcome to the Calimero KV Store Demo",
-      "subtitle": "A decentralized key-value storage application",
+      "subtitle": "A P2P key-value storage application",
       "features": [
-        "Store and retrieve key-value pairs on the Calimero network",
-        "Real-time data synchronization across the network",
-        "Secure and decentralized data storage",
+        "Store and retrieve key-value pairs on the Calimero P2P network",
+        "Real-time data synchronization across P2P nodes",
+        "Secure and distributed data storage",
         "Easy-to-use interface for managing your data"
       ],
       "getStarted": "Connect your wallet to get started"
