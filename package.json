@@ -8,12 +8,15 @@
     "app:build": "pnpm --dir app build",
     "app:preview": "pnpm --dir app preview",
     "app:generate-client": "calimero-abi-codegen -i logic/res/abi.json -o app/src/api ",
-    "network:bootstrap": "merobox bootstrap run workflows/workflow-example.yml"
+    "network:bootstrap": "npx @calimero-network/merobox-js@latest bootstrap run workflows/workflow-example.yml"
   },
   "devDependencies": {
+    "@calimero-network/merobox-js": "^0.0.3",
     "husky": "^9.0.11"
   },
   "dependencies": {
-    "@calimero-is-near/abi-codegen": "^0.1.0"
+    "@calimero-is-near/abi-codegen": "^0.1.0",
+    "@calimero-network/mero-icons": "^0.0.4",
+    "@calimero-network/mero-ui": "^0.3.4"
   }
 }
