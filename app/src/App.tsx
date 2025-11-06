@@ -7,14 +7,10 @@ import HomePage from './pages/home';
 import Authenticate from './pages/login/Authenticate';
 
 export default function App() {
-  const [clientAppId] = useState<string>(
-    '8seLjoBTEZS9odraP9ePZvYCXEFw5bsbyyRxafXqrMEy',
-  );
-
   return (
     <CalimeroProvider
-      clientApplicationId={clientAppId}
-      applicationPath={window.location.pathname || '/'}
+      packageName="network.calimero.kv-store"
+      registryUrl="http://localhost:8082"
       mode={AppMode.MultiContext}
     >
       <ToastProvider>
