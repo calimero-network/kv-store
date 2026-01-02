@@ -54,13 +54,14 @@ export class KvStoreLogic extends KvStore {
     env.log(`Setting key: ${key} to value: ${value}`);
 
     const exists = this.items.has(key);
-    this.items.set(key, value);
 
     if (exists) {
       emitWithHandler(new Updated(key, value), "updateHandler");
     } else {
       emitWithHandler(new Inserted(key, value), "insertHandler");
     }
+
+    this.items.set(key, value);
   }
 
   @View()
@@ -115,18 +116,18 @@ export class KvStoreLogic extends KvStore {
     env.log(`Removing key: ${key}`);
     const value = this.items.get(key);
     if (value !== undefined) {
-      this.items.remove(key);
       emitWithHandler(new Removed(key), "removeHandler");
+      this.items.remove(key);
     }
     return this.respond(value ?? null);
   }
 
   clear(): void {
     env.log("Clearing all entries");
+    emitWithHandler(new Cleared(), "clearHandler");
     for (const [key] of this.items.entries()) {
       this.items.remove(key);
     }
-    emitWithHandler(new Cleared(), "clearHandler");
   }
 
   private respond(payload: unknown): string {
