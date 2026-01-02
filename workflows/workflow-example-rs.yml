@@ -17,7 +17,7 @@ steps:
   - name: Install Application on Node 1
     type: install_application
     node: calimero-node-1
-    path: logic/res/kv_store.wasm
+    path: logic/rs/res/kv_store.wasm
     dev: true
     outputs:
       app_id: applicationId # Export 'applicationId' field as 'app_id'
@@ -80,10 +80,46 @@ steps:
     outputs:
       set_result: result # Export 'result' as 'set_result'
 
-  # Step 8: Wait for the set operation to complete and propagate
-  - name: Wait for Set Operation
-    type: wait
-    seconds: 3
+  # Step 8: Wait for state change to sync across all nodes
+  - name: Wait for State Change to Sync
+    type: wait_for_sync
+    context_id: "{{context_id}}"
+    nodes:
+      - calimero-node-1
+      - calimero-node-2
+    timeout: 60
+    check_interval: 2
+    trigger_sync: true
+    outputs:
+      set_sync_hash: root_hash
+      set_sync_time: elapsed_seconds
+
+  # Step 8.5: Assert set operation result
+  - name: Assert Set Operation Result
+    type: assert
+    statements:
+      - "is_set({{set_result}})"
+      - "{{set_result}} != ''"
+
+  # Step 8.6: Verify value exists on node-1 (same node that set it)
+  - name: Verify Value on Node 1
+    type: call
+    node: calimero-node-1
+    context_id: "{{context_id}}"
+    executor_public_key: "{{member_public_key}}"
+    method: get
+    args:
+      key: hello
+    outputs:
+      get_result_node1: result
+
+  # Step 8.7: Assert value exists on node-1
+  # The get method returns the value directly, which becomes {"output": "world"}
+  - name: Assert Value on Node 1
+    type: json_assert
+    statements:
+      - 'json_subset({{get_result_node1}}, {"output": "world"})'
+      - 'subset({{get_result_node1}}, {"output": "world"})'
 
   # Step 9: Execute a view call to retrieve the stored value
   # Demonstrates cross-node execution using the joined context
@@ -97,6 +133,28 @@ steps:
       key: hello
     outputs:
       get_result: result # Export 'result' as 'get_result'
+
+  # Step 9.5: Wait for cross-node sync before verifying
+  - name: Wait for Cross-Node Sync
+    type: wait_for_sync
+    context_id: "{{context_id}}"
+    nodes:
+      - calimero-node-1
+      - calimero-node-2
+    timeout: 60
+    check_interval: 2
+    trigger_sync: true
+    outputs:
+      get_sync_hash: root_hash
+      get_sync_time: elapsed_seconds
+
+  # Step 9.6: Assert get operation result
+  # The get method returns the value directly, which becomes {"output": "world"}
+  - name: Assert Get Operation Result
+    type: json_assert
+    statements:
+      - 'json_subset({{get_result}}, {"output": "world"})'
+      - 'subset({{get_result}}, {"output": "world"})'
 
   # Step 10: Repeat a set of operations multiple times
   # Demonstrates the new repeat step functionality
@@ -118,9 +176,15 @@ steps:
         outputs:
           iteration_set_result: result # Export 'result' as 'iteration_set_result'
 
-      - name: Wait for Set Operation
-        type: wait
-        seconds: 2
+      - name: Wait for Iteration Set to Sync
+        type: wait_for_sync
+        context_id: "{{context_id}}"
+        nodes:
+          - calimero-node-1
+          - calimero-node-2
+        timeout: 60
+        check_interval: 2
+        trigger_sync: true
 
       - name: Get Key-Value Pair
         type: call
@@ -132,6 +196,74 @@ steps:
           key: "iteration_{{current_iteration}}"
         outputs:
           iteration_get_result: result # Export 'result' as 'iteration_get_result'
+
+  # Step 11: Final assertions to verify all operations
+  - name: Assert All Operations Completed
+    type: assert
+    statements:
+      - "is_set({{app_id}})"
+      - "is_set({{context_id}})"
+      - "is_set({{member_public_key}})"
+      - "is_set({{public_key}})"
+      - "is_set({{set_result}})"
+      - "is_set({{get_result}})"
+      - "{{context_id}} != ''"
+
+  # Step 11.5: Final JSON assertion for get result
+  - name: Assert Final Get Result
+    type: json_assert
+    statements:
+      - 'json_subset({{get_result}}, {"output": "world"})'
+
+  # Step 12: Wait for all iterations to sync before checking entries
+  - name: Wait for All Iterations to Sync
+    type: wait_for_sync
+    context_id: "{{context_id}}"
+    nodes:
+      - calimero-node-1
+      - calimero-node-2
+    timeout: 60
+    check_interval: 2
+    trigger_sync: true
+    outputs:
+      entries_sync_hash: root_hash
+      entries_sync_time: elapsed_seconds
+
+  # Step 12.5: Verify entries method returns all values
+  - name: Execute View Call - Get All Entries
+    type: call
+    node: calimero-node-1
+    context_id: "{{context_id}}"
+    executor_public_key: "{{member_public_key}}"
+    method: entries
+    outputs:
+      entries_result: result
+
+  - name: Assert Entries Result
+    type: assert
+    statements:
+      - "is_set({{entries_result}})"
+      - "contains({{entries_result}}, 'hello')"
+      - "contains({{entries_result}}, 'world')"
+      - "contains({{entries_result}}, 'iteration_1')"
+      - "contains({{entries_result}}, 'iteration_2')"
+      - "contains({{entries_result}}, 'iteration_3')"
+
+  # Step 13: Verify length method
+  - name: Execute View Call - Get Length
+    type: call
+    node: calimero-node-2
+    context_id: "{{context_id}}"
+    executor_public_key: "{{public_key}}"
+    method: len
+    outputs:
+      len_result: result
+
+  - name: Assert Length Result
+    type: json_assert
+    statements:
+      - 'json_subset({{len_result}}, {"output": 4})'
+      - 'subset({{len_result}}, {"output": 4})'
 
 # Configuration options
 stop_all_nodes: false # Stop all nodes at the end of workflow
