@@ -5,3 +5,10 @@
 data/
 target/
 res/
+logic/js/node_modules/
+logic/js/build/
+# JS build artifacts (keep res/ for WASM output)
+logic/js/res/bundle.js
+logic/js/res/*.c
+logic/js/res/*.h
+logic/js/res/*.unoptimized.wasm
