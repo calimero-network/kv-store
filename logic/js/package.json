@@ -1,0 +1,18 @@
+{
+  "name": "kv-store-js",
+  "version": "0.2.5",
+  "private": true,
+  "description": "Key-value store JavaScript implementation for Calimero",
+  "scripts": {
+    "build": "calimero-sdk build src/index.ts -o res/service.wasm",
+    "clean": "rm -rf res build"
+  },
+  "dependencies": {
+    "@calimero-network/calimero-sdk-js": "^0.1.0"
+  },
+  "devDependencies": {
+    "@calimero-network/calimero-cli-js": "^0.1.0",
+    "typescript": "^5.3.3",
+    "tslib": "^2.6.2"
+  }
+}
