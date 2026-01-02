@@ -123,12 +123,3 @@ logic/js/
 ├── tsconfig.json      # TypeScript configuration
 └── build.sh           # Build script
 ```
-
-## Comparison with Rust Version
-
-This JavaScript implementation provides the same API and functionality as the Rust version in `logic/rs/`, with the following differences:
-
-- Uses TypeScript/JavaScript instead of Rust
-- Uses the Calimero JavaScript SDK instead of the Rust SDK
-- View methods return JSON strings (as required by the JS SDK)
-- Error handling uses JSON error objects instead of Rust's Result type
