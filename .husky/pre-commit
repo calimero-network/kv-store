@@ -7,8 +7,14 @@ if git diff --cached --name-only | grep -q '^app/'; then
   (cd app && pnpm prettier && pnpm lint:fix)
 fi
 
-# Check for changes in the 'logic' directory
-if git diff --cached --name-only | grep -q '^logic/'; then
+# Check for changes in the 'logic/rs' directory
+if git diff --cached --name-only | grep -q '^logic/rs/'; then
   echo "Running checks for the Rust logic..."
-  (cd logic && cargo test && cargo fmt -- --check)
+  (cd logic/rs && cargo test && cargo fmt -- --check)
+fi
+
+# Check for changes in the 'logic/js' directory
+if git diff --cached --name-only | grep -q '^logic/js/'; then
+  echo "Running checks for the JavaScript logic..."
+  (cd logic/js && pnpm exec tsc --noEmit)
 fi
