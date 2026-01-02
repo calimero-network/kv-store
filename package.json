@@ -1,16 +1,20 @@
 {
   "scripts": {
     "prepare": "husky",
-    "logic:build": "bash ./logic/build.sh",
-    "logic:clean": "rm -rf ./logic/target ./logic/res",
+    "logic:build": "bash ./logic/rs/build.sh",
+    "logic:build:js": "bash ./logic/js/build.sh",
+    "logic:clean": "rm -rf ./logic/rs/target ./logic/rs/res",
+    "logic:clean:js": "rm -rf ./logic/js/res ./logic/js/build",
     "logic:sync": "bash ./scripts/sync-wasm.sh",
-    "logic:watch": "chokidar \"logic/res/**/*\" -c \"node scripts/on-res-change.mjs {path}\"",
+    "logic:watch": "chokidar \"logic/rs/res/**/*\" -c \"node scripts/on-res-change.mjs {path}\"",
+    "logic:watch:js": "chokidar \"logic/js/res/**/*\" -c \"node scripts/on-res-change.mjs {path}\"",
     "app:install": "pnpm --dir app install",
     "app:dev": "concurrently -n web,res -c green,magenta \"pnpm --dir app dev\" \"pnpm run logic:watch\"",
     "app:build": "pnpm --dir app build",
     "app:preview": "pnpm --dir app preview",
-    "app:generate-client": "npx @calimero-network/abi-codegen@0.1.1 -i logic/res/abi.json -o app/src/api ",
-    "network:bootstrap": "npx @calimero-network/merobox-js@latest bootstrap run workflows/workflow-example.yml"
+    "app:generate-client": "npx @calimero-network/abi-codegen@0.1.1 -i logic/rs/res/abi.json -o app/src/api ",
+    "network:bootstrap": "npx @calimero-network/merobox-js@latest bootstrap run workflows/workflow-example-rs.yml",
+    "network:bootstrap:js": "npx @calimero-network/merobox-js@latest bootstrap run workflows/workflow-example-js.yml"
   },
   "devDependencies": {
     "@calimero-network/merobox-js": "^0.0.3",
