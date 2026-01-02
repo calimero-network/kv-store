@@ -115,10 +115,8 @@ export class KvStoreLogic extends KvStore {
   remove(key: string): string {
     env.log(`Removing key: ${key}`);
     const value = this.items.get(key);
-    if (value !== undefined) {
-      emitWithHandler(new Removed(key), "removeHandler");
-      this.items.remove(key);
-    }
+    emitWithHandler(new Removed(key), "removeHandler");
+    this.items.remove(key);
     return this.respond(value ?? null);
   }
 
