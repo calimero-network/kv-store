@@ -8,7 +8,7 @@
     "type": "wasm",
     "target": "node",
     "digest": "sha256:placeholder",
-    "uri": "file://logic/res/kv-store.wasm"
+    "uri": "file://logic/rs/res/kv-store.wasm"
   },
   "provides": ["kv.store@1"],
   "requires": [],
