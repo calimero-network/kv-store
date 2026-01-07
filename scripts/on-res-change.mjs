@@ -26,7 +26,13 @@ if (file === 'abi.json') {
   run('pnpm run app:generate-client');
 } else if (file.endsWith('.wasm')) {
   console.log(`[res watcher] WASM changed: ${changedPath}`);
-  run(`pnpm run logic:sync ${JSON.stringify(changedPath)}`);
+  // Sync to registry if running, otherwise sync to merobox nodes
+  if (process.env.SYNC_REGISTRY !== 'false') {
+    run(`pnpm run registry:sync ${JSON.stringify(changedPath)}`);
+  }
+  if (process.env.SYNC_MEROBOX !== 'false') {
+    run(`pnpm run logic:sync ${JSON.stringify(changedPath)}`);
+  }
 } else {
   // ignore unrelated files
 }
