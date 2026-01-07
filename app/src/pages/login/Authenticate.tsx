@@ -17,7 +17,6 @@ import {
 import {
   useCalimero,
   CalimeroConnectButton,
-  ConnectionType,
 } from '@calimero-network/calimero-client';
 import translations from '../../constants/en.global.json';
 
@@ -37,12 +36,7 @@ export default function Authenticate() {
         <NavbarBrand text="KV Store" />
         <NavbarMenu align="right">
           <NavbarItem>
-            <CalimeroConnectButton
-              connectionType={{
-                type: ConnectionType.Custom,
-                url: 'http://node1.127.0.0.1.nip.io',
-              }}
-            />
+            <CalimeroConnectButton />
           </NavbarItem>
         </NavbarMenu>
       </MeroNavbar>
