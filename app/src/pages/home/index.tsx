@@ -37,7 +37,7 @@ import { createKvClient, AbiClient } from '../../features/kv/api';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { isAuthenticated, logout, app, appUrl } = useCalimero();
+  const { isAuthenticated, app, appUrl } = useCalimero();
   const { show } = useToast();
   const [key, setKey] = useState<string>('');
   const [value, setValue] = useState<string>('');
@@ -194,7 +194,7 @@ export default function HomePage() {
     clearContextId();
     clearExecutorPublicKey();
     localStorage.removeItem('calimero-application-id');
-    
+
     // Use replace instead of reload to ensure we navigate to root path
     // This prevents the redirect loop that happens when reload() keeps the current path
     window.location.replace('/');
