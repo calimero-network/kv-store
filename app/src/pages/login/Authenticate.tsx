@@ -26,7 +26,16 @@ export default function Authenticate() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/home');
+      // Use replace: true to avoid adding to history
+      const currentPath = window.location.pathname;
+      // Only redirect if we're on the root path
+      if (
+        currentPath === '/' ||
+        currentPath === '' ||
+        currentPath === '/index.html'
+      ) {
+        navigate('/home', { replace: true });
+      }
     }
   }, [isAuthenticated, navigate]);
 
