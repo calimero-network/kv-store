@@ -28,6 +28,10 @@ import {
   useCalimero,
   CalimeroConnectButton,
   ConnectionType,
+  clearAccessToken,
+  clearApplicationId,
+  clearContextId,
+  clearExecutorPublicKey,
 } from '@calimero-network/calimero-client';
 import { createKvClient, AbiClient } from '../../features/kv/api';
 
@@ -182,9 +186,19 @@ export default function HomePage() {
   // Websocket event subscription removed; rely on manual refresh after mutations
 
   const doLogout = useCallback(() => {
-    // logout() already calls window.location.reload(), so we don't need to navigate
-    logout();
-  }, [logout]);
+    // Manually clear all auth state to avoid window.location.reload() which
+    // reloads the current page (e.g., /home) instead of navigating to root.
+    // This prevents the redirect loop that happens in production.
+    clearAccessToken();
+    clearApplicationId();
+    clearContextId();
+    clearExecutorPublicKey();
+    localStorage.removeItem('calimero-application-id');
+    
+    // Use replace instead of reload to ensure we navigate to root path
+    // This prevents the redirect loop that happens when reload() keeps the current path
+    window.location.replace('/');
+  }, []);
 
   return (
     <>
