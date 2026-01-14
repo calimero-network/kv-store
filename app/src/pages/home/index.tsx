@@ -52,9 +52,9 @@ export default function HomePage() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Create API client when app is available
+  // Create API client when app is available and authenticated
   useEffect(() => {
-    if (!app) return;
+    if (!app || !isAuthenticated) return;
 
     const initializeApi = async () => {
       try {
@@ -73,12 +73,15 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error('Failed to create API client:', error);
-        window.alert('Failed to initialize API client');
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        // Don't show alert - just log the error. The user should authenticate first.
+        console.error('API client initialization failed:', errorMessage);
       }
     };
 
     initializeApi();
-  }, [app]);
+  }, [app, isAuthenticated, appUrl]);
 
   const getEntries = useCallback(async () => {
     if (loadingEntriesRef.current || !api) return;
@@ -179,9 +182,9 @@ export default function HomePage() {
   // Websocket event subscription removed; rely on manual refresh after mutations
 
   const doLogout = useCallback(() => {
+    // logout() already calls window.location.reload(), so we don't need to navigate
     logout();
-    navigate('/');
-  }, [logout, navigate]);
+  }, [logout]);
 
   return (
     <>
