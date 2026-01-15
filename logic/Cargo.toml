@@ -1,7 +1,7 @@
 [package]
 name = "kv-store"
 description = "Calimero KV Store application"
-version = "0.2.5"
+version = "0.2.11"
 edition = "2021"
 
 [lib]
