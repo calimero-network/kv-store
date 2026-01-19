@@ -280,5 +280,3 @@ Developer                 Watcher                Registry CLI           Frontend
 4. **Make changes** to `logic/src/lib.rs` and see them auto-sync!
 
 Happy coding! 🚀
-
-

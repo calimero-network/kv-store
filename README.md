@@ -85,13 +85,7 @@ Notes:
 
 Client types and a thin client are generated into `app/src/api` from `logic/res/abi.json`.
 
-- Ad-hoc run:
-
-```bash
-pnpm run app:generate-client
-```
-
-- This is also run automatically by the watcher on `abi.json` changes.
+- This is runs automatically by the watcher on `abi.json` changes.
 
 ## Merobox (Local Network)
 
@@ -118,15 +112,6 @@ pnpm run logic:build
 ```
 
 When the wasm in `logic/res/` updates, the watcher copies it to `data/calimero-node-1/` and `data/calimero-node-2/` automatically.
-
-3) If you change public methods or events, update ABI and regenerate client:
-
-```bash
-# If you produce a new ABI at logic/res/abi.json
-pnpm run app:generate-client
-```
-
-The watcher also regenerates automatically on `abi.json` changes.
 
 ## Troubleshooting
 
