@@ -23,7 +23,6 @@ function run(command) {
 
 if (file === 'abi.json') {
   console.log(`[res watcher] ABI changed: ${changedPath}`);
-  run('pnpm run app:generate-client');
 } else if (file.endsWith('.wasm')) {
   console.log(`[res watcher] WASM changed: ${changedPath}`);
   // Sync to registry if running, otherwise sync to merobox nodes
