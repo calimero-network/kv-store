@@ -28,20 +28,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "concurrently \"pnpm:lint:*(!fix)\"",
-    "lint:src": "eslint . --ext .ts,.tsx src --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "concurrently \"pnpm:lint:*:fix\"",
-    "lint:src:fix": "eslint . --ext .ts,.tsx --fix src",
+    "lint": "eslint . --ext .ts,.tsx src --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix src",
     "preview": "vite preview",
-    "predeploy": "pnpm run build",
-    "deploy": "gh-pages -d build",
     "prettier": "exec prettier . --write"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [
