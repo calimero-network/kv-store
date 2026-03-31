@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -6,29 +6,25 @@ import {
   CardTitle,
   CardContent,
   Button,
+  Input,
   Grid,
   GridItem,
   Navbar as MeroNavbar,
   NavbarBrand,
   NavbarMenu,
   NavbarItem,
-  List,
 } from '@calimero-network/mero-ui';
-import {
-  useCalimero,
-  CalimeroConnectButton,
-} from '@calimero-network/calimero-client';
+import { useMero } from '@calimero-network/mero-react';
 import translations from '../../constants/en.global.json';
 
 export default function Authenticate() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useCalimero();
+  const { isAuthenticated, connectToNode } = useMero();
+  const [nodeUrl, setNodeUrl] = useState(import.meta.env.VITE_NODE_URL || 'http://localhost:4001');
 
   useEffect(() => {
     if (isAuthenticated) {
-      // Use replace: true to avoid adding to history
       const currentPath = window.location.pathname;
-      // Only redirect if we're on the root path
       if (
         currentPath === '/' ||
         currentPath === '' ||
@@ -45,7 +41,21 @@ export default function Authenticate() {
         <NavbarBrand text="KV Store" />
         <NavbarMenu align="right">
           <NavbarItem>
-            <CalimeroConnectButton />
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <Input
+                type="text"
+                value={nodeUrl}
+                onChange={(e) => setNodeUrl(e.target.value)}
+                placeholder="http://localhost:4001"
+                style={{ width: '220px', fontSize: '0.85rem' }}
+              />
+              <Button
+                variant="primary"
+                onClick={() => connectToNode(nodeUrl)}
+              >
+                Connect
+              </Button>
+            </div>
           </NavbarItem>
         </NavbarMenu>
       </MeroNavbar>
@@ -152,7 +162,7 @@ export default function Authenticate() {
                             letterSpacing: '0.05em',
                           }}
                         >
-                          ✨ Key Features
+                          Key Features
                         </h3>
                         <div
                           style={{
@@ -229,27 +239,9 @@ export default function Authenticate() {
                         style={{
                           minWidth: '140px',
                           minHeight: '2.5rem',
-                          background:
-                            'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontWeight: '600',
-                          fontSize: '0.9rem',
-                          boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)',
-                          transition: 'all 0.2s ease-in-out',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                          e.currentTarget.style.boxShadow =
-                            '0 6px 12px -3px rgba(59, 130, 246, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow =
-                            '0 4px 6px -1px rgba(59, 130, 246, 0.3)';
                         }}
                       >
-                        📚 {translations.home.documentation}
+                        {translations.home.documentation}
                       </Button>
                       <Button
                         variant="secondary"
@@ -263,27 +255,9 @@ export default function Authenticate() {
                         style={{
                           minWidth: '140px',
                           minHeight: '2.5rem',
-                          background:
-                            'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontWeight: '600',
-                          fontSize: '0.9rem',
-                          boxShadow: '0 4px 6px -1px rgba(107, 114, 128, 0.3)',
-                          transition: 'all 0.2s ease-in-out',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                          e.currentTarget.style.boxShadow =
-                            '0 6px 12px -3px rgba(107, 114, 128, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow =
-                            '0 4px 6px -1px rgba(107, 114, 128, 0.3)';
                         }}
                       >
-                        🐙 {translations.home.github}
+                        {translations.home.github}
                       </Button>
                       <Button
                         variant="info"
@@ -297,27 +271,9 @@ export default function Authenticate() {
                         style={{
                           minWidth: '140px',
                           minHeight: '2.5rem',
-                          background:
-                            'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-                          border: 'none',
-                          borderRadius: '6px',
-                          fontWeight: '600',
-                          fontSize: '0.9rem',
-                          boxShadow: '0 4px 6px -1px rgba(6, 182, 212, 0.3)',
-                          transition: 'all 0.2s ease-in-out',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                          e.currentTarget.style.boxShadow =
-                            '0 6px 12px -3px rgba(6, 182, 212, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow =
-                            '0 4px 6px -1px rgba(6, 182, 212, 0.3)';
                         }}
                       >
-                        🌐 {translations.home.website}
+                        {translations.home.website}
                       </Button>
                     </div>
                   </CardContent>
