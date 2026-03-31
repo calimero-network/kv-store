@@ -20,7 +20,9 @@ import translations from '../../constants/en.global.json';
 export default function Authenticate() {
   const navigate = useNavigate();
   const { isAuthenticated, connectToNode } = useMero();
-  const [nodeUrl, setNodeUrl] = useState(import.meta.env.VITE_NODE_URL || 'http://localhost:4001');
+  const [nodeUrl, setNodeUrl] = useState(
+    import.meta.env.VITE_NODE_URL || 'http://localhost:4001',
+  );
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -41,7 +43,9 @@ export default function Authenticate() {
         <NavbarBrand text="KV Store" />
         <NavbarMenu align="right">
           <NavbarItem>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <div
+              style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}
+            >
               <Input
                 type="text"
                 value={nodeUrl}
@@ -49,10 +53,7 @@ export default function Authenticate() {
                 placeholder="http://localhost:4001"
                 style={{ width: '220px', fontSize: '0.85rem' }}
               />
-              <Button
-                variant="primary"
-                onClick={() => connectToNode(nodeUrl)}
-              >
+              <Button variant="primary" onClick={() => connectToNode(nodeUrl)}>
                 Connect
               </Button>
             </div>

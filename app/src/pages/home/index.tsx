@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 import {
   Button,
   Input,
@@ -28,7 +34,15 @@ import { KvStoreClient } from '../../generated/KvStoreClient';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { isAuthenticated, contextId, contextIdentity, applicationId, nodeUrl, mero, logout } = useMero();
+  const {
+    isAuthenticated,
+    contextId,
+    contextIdentity,
+    applicationId,
+    nodeUrl,
+    mero,
+    logout,
+  } = useMero();
   const { show } = useToast();
   const [key, setKey] = useState<string>('');
   const [value, setValue] = useState<string>('');
@@ -36,9 +50,10 @@ export default function HomePage() {
   const loadingEntriesRef = useRef<boolean>(false);
 
   const client = useMemo(
-    () => mero && contextId && contextIdentity
-      ? new KvStoreClient(mero, contextId, contextIdentity)
-      : null,
+    () =>
+      mero && contextId && contextIdentity
+        ? new KvStoreClient(mero, contextId, contextIdentity)
+        : null,
     [mero, contextId, contextIdentity],
   );
 
@@ -53,7 +68,10 @@ export default function HomePage() {
     loadingEntriesRef.current = true;
     try {
       const data = await client.entries();
-      const entriesArray = Object.entries(data).map(([k, v]) => ({ key: k, value: v }));
+      const entriesArray = Object.entries(data).map(([k, v]) => ({
+        key: k,
+        value: v,
+      }));
       setEntries(entriesArray);
     } catch (error) {
       console.error('getEntries error:', error);
@@ -72,7 +90,10 @@ export default function HomePage() {
       setValue('');
     } catch (error) {
       show({
-        title: error instanceof Error ? error.message : translations.home.errors.setFailed,
+        title:
+          error instanceof Error
+            ? error.message
+            : translations.home.errors.setFailed,
         variant: 'error',
       });
     }
@@ -86,7 +107,10 @@ export default function HomePage() {
       show({ title: 'All entries cleared successfully', variant: 'success' });
     } catch (error) {
       show({
-        title: error instanceof Error ? error.message : translations.home.errors.clearFailed,
+        title:
+          error instanceof Error
+            ? error.message
+            : translations.home.errors.clearFailed,
         variant: 'error',
       });
     }
@@ -98,10 +122,16 @@ export default function HomePage() {
       try {
         await client.remove({ key: entryKey });
         await getEntries();
-        show({ title: `Successfully removed entry: ${entryKey}`, variant: 'success' });
+        show({
+          title: `Successfully removed entry: ${entryKey}`,
+          variant: 'success',
+        });
       } catch (error) {
         show({
-          title: error instanceof Error ? error.message : translations.home.errors.removeFailed,
+          title:
+            error instanceof Error
+              ? error.message
+              : translations.home.errors.removeFailed,
           variant: 'error',
         });
       }
@@ -117,10 +147,7 @@ export default function HomePage() {
   }, [isAuthenticated, contextId, contextIdentity, getEntries]);
 
   // Real-time updates via SSE
-  const contextIds = useMemo(
-    () => (contextId ? [contextId] : []),
-    [contextId],
-  );
+  const contextIds = useMemo(() => (contextId ? [contextId] : []), [contextId]);
   const getEntriesRef = useRef(getEntries);
   getEntriesRef.current = getEntries;
 
@@ -151,29 +178,73 @@ export default function HomePage() {
               }}
             >
               {nodeUrl && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Text size="sm" color="muted">Node:</Text>
-                  <Text size="sm" style={{ fontFamily: 'monospace', color: '#e5e7eb' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <Text size="sm" color="muted">
+                    Node:
+                  </Text>
+                  <Text
+                    size="sm"
+                    style={{ fontFamily: 'monospace', color: '#e5e7eb' }}
+                  >
                     {nodeUrl.replace('http://', '').replace('https://', '')}
                   </Text>
-                  <CopyToClipboard text={nodeUrl} variant="icon" size="small" successMessage="Node URL copied!" />
+                  <CopyToClipboard
+                    text={nodeUrl}
+                    variant="icon"
+                    size="small"
+                    successMessage="Node URL copied!"
+                  />
                 </div>
               )}
               {applicationId && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Text size="sm" color="muted">App ID:</Text>
-                  <Text size="sm" style={{ fontFamily: 'monospace', color: '#e5e7eb' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <Text size="sm" color="muted">
+                    App ID:
+                  </Text>
+                  <Text
+                    size="sm"
+                    style={{ fontFamily: 'monospace', color: '#e5e7eb' }}
+                  >
                     {applicationId.slice(0, 8)}...{applicationId.slice(-8)}
                   </Text>
-                  <CopyToClipboard text={applicationId} variant="icon" size="small" successMessage="Application ID copied!" />
+                  <CopyToClipboard
+                    text={applicationId}
+                    variant="icon"
+                    size="small"
+                    successMessage="Application ID copied!"
+                  />
                 </div>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Text size="sm" color="muted">Context ID:</Text>
-                <Text size="sm" style={{ fontFamily: 'monospace', color: '#e5e7eb' }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <Text size="sm" color="muted">
+                  Context ID:
+                </Text>
+                <Text
+                  size="sm"
+                  style={{ fontFamily: 'monospace', color: '#e5e7eb' }}
+                >
                   {contextId.slice(0, 8)}...{contextId.slice(-8)}
                 </Text>
-                <CopyToClipboard text={contextId} variant="icon" size="small" successMessage="Context ID copied!" />
+                <CopyToClipboard
+                  text={contextId}
+                  variant="icon"
+                  size="small"
+                  successMessage="Context ID copied!"
+                />
               </div>
             </div>
           )}
@@ -243,7 +314,8 @@ export default function HomePage() {
                       <div
                         style={{
                           display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                          gridTemplateColumns:
+                            'repeat(auto-fit, minmax(200px, 1fr))',
                           gap: '1rem',
                           width: '100%',
                         }}
@@ -263,11 +335,26 @@ export default function HomePage() {
                           style={{ width: '100%' }}
                         />
                       </div>
-                      <div style={{ display: 'flex', gap: '1rem', width: '100%', flexWrap: 'wrap' }}>
-                        <Button type="submit" variant="success" style={{ flex: 1, minHeight: '3rem' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '1rem',
+                          width: '100%',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <Button
+                          type="submit"
+                          variant="success"
+                          style={{ flex: 1, minHeight: '3rem' }}
+                        >
                           {translations.home.setEntry}
                         </Button>
-                        <Button variant="error" onClick={resetEntries} style={{ flex: 1, minHeight: '3rem' }}>
+                        <Button
+                          variant="error"
+                          onClick={resetEntries}
+                          style={{ flex: 1, minHeight: '3rem' }}
+                        >
                           {translations.home.resetEntries}
                         </Button>
                       </div>
@@ -304,7 +391,11 @@ export default function HomePage() {
                                 <Button
                                   variant="error"
                                   onClick={() => handleRemoveEntry(row.key)}
-                                  style={{ padding: '8px 12px', minWidth: 'auto', borderRadius: '6px' }}
+                                  style={{
+                                    padding: '8px 12px',
+                                    minWidth: 'auto',
+                                    borderRadius: '6px',
+                                  }}
                                 >
                                   <Trash size={16} />
                                 </Button>
