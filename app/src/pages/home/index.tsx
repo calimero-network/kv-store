@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 import {
   Button,
   Input,
@@ -16,7 +22,6 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  List,
   useToast,
   CopyToClipboard,
   Text,
@@ -24,31 +29,33 @@ import {
 import { Trash } from '@calimero-network/mero-icons';
 import translations from '../../constants/en.global.json';
 import { useNavigate } from 'react-router-dom';
-import {
-  useCalimero,
-  CalimeroConnectButton,
-  ConnectionType,
-  clearAccessToken,
-  clearApplicationId,
-  clearContextId,
-  clearExecutorPublicKey,
-} from '@calimero-network/calimero-client';
-import { createKvClient, AbiClient } from '../../features/kv/api';
+import { useMero, useSubscription, MeroJs } from '@calimero-network/mero-react';
+import { KvStoreClient } from '../../generated/KvStoreClient';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { isAuthenticated, app, appUrl } = useCalimero();
+  const {
+    isAuthenticated,
+    contextId,
+    contextIdentity,
+    applicationId,
+    nodeUrl,
+    mero,
+    logout,
+  } = useMero();
   const { show } = useToast();
   const [key, setKey] = useState<string>('');
   const [value, setValue] = useState<string>('');
-  const [entries, setEntries] = useState<any[]>([]);
-  const [api, setApi] = useState<AbiClient | null>(null);
-  const [currentContext, setCurrentContext] = useState<{
-    applicationId: string;
-    contextId: string;
-    nodeUrl: string;
-  } | null>(null);
+  const [entries, setEntries] = useState<{ key: string; value: string }[]>([]);
   const loadingEntriesRef = useRef<boolean>(false);
+
+  const client = useMemo(
+    () =>
+      mero && contextId && contextIdentity
+        ? new KvStoreClient(mero, contextId, contextIdentity)
+        : null,
+    [mero, contextId, contextIdentity],
+  );
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -56,42 +63,11 @@ export default function HomePage() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Create API client when app is available and authenticated
-  useEffect(() => {
-    if (!app || !isAuthenticated) return;
-
-    const initializeApi = async () => {
-      try {
-        const client = await createKvClient(app);
-        setApi(client);
-
-        // Get context information
-        const contexts = await app.fetchContexts();
-        if (contexts.length > 0) {
-          const context = contexts[0];
-          setCurrentContext({
-            applicationId: context.applicationId,
-            contextId: context.contextId,
-            nodeUrl: appUrl || 'http://node1.127.0.0.1.nip.io', // Fallback to hardcoded URL
-          });
-        }
-      } catch (error) {
-        console.error('Failed to create API client:', error);
-        const errorMessage =
-          error instanceof Error ? error.message : 'Unknown error';
-        // Don't show alert - just log the error. The user should authenticate first.
-        console.error('API client initialization failed:', errorMessage);
-      }
-    };
-
-    initializeApi();
-  }, [app, isAuthenticated, appUrl]);
-
   const getEntries = useCallback(async () => {
-    if (loadingEntriesRef.current || !api) return;
+    if (loadingEntriesRef.current || !client) return;
     loadingEntriesRef.current = true;
     try {
-      const data = await api.entries();
+      const data = await client.entries();
       const entriesArray = Object.entries(data).map(([k, v]) => ({
         key: k,
         value: v,
@@ -99,29 +75,20 @@ export default function HomePage() {
       setEntries(entriesArray);
     } catch (error) {
       console.error('getEntries error:', error);
-      window.alert(
-        error instanceof Error
-          ? error.message
-          : translations.home.errors.loadFailed,
-      );
     } finally {
       loadingEntriesRef.current = false;
     }
-  }, [api]);
+  }, [client]);
 
   const setEntry = useCallback(async () => {
-    if (!api) return;
+    if (!client) return;
     try {
-      await api.set({ key, value });
+      await client.set({ key, value });
       await getEntries();
-      show({
-        title: `Successfully added entry: ${key}`,
-        variant: 'success',
-      });
+      show({ title: `Successfully added entry: ${key}`, variant: 'success' });
       setKey('');
       setValue('');
     } catch (error) {
-      console.error('setEntry error:', error);
       show({
         title:
           error instanceof Error
@@ -130,19 +97,15 @@ export default function HomePage() {
         variant: 'error',
       });
     }
-  }, [api, key, value, getEntries, show]);
+  }, [client, key, value, getEntries, show]);
 
   const resetEntries = useCallback(async () => {
-    if (!api) return;
+    if (!client) return;
     try {
-      await api.clear();
+      await client.clear();
       await getEntries();
-      show({
-        title: 'All entries cleared successfully',
-        variant: 'success',
-      });
+      show({ title: 'All entries cleared successfully', variant: 'success' });
     } catch (error) {
-      console.error('resetEntries error:', error);
       show({
         title:
           error instanceof Error
@@ -151,20 +114,19 @@ export default function HomePage() {
         variant: 'error',
       });
     }
-  }, [api, getEntries, show]);
+  }, [client, getEntries, show]);
 
   const handleRemoveEntry = useCallback(
     async (entryKey: string) => {
-      if (!api) return;
+      if (!client) return;
       try {
-        await api.remove({ key: entryKey });
+        await client.remove({ key: entryKey });
         await getEntries();
         show({
           title: `Successfully removed entry: ${entryKey}`,
           variant: 'success',
         });
       } catch (error) {
-        console.error('removeEntry error:', error);
         show({
           title:
             error instanceof Error
@@ -174,38 +136,36 @@ export default function HomePage() {
         });
       }
     },
-    [api, getEntries, show],
+    [client, getEntries, show],
   );
 
+  // Initial load
   useEffect(() => {
-    if (isAuthenticated && api) {
+    if (isAuthenticated && contextId && contextIdentity) {
       getEntries();
     }
-  }, [isAuthenticated, api, getEntries]);
+  }, [isAuthenticated, contextId, contextIdentity, getEntries]);
 
-  // Websocket event subscription removed; rely on manual refresh after mutations
+  // Real-time updates via SSE
+  const contextIds = useMemo(() => (contextId ? [contextId] : []), [contextId]);
+  const getEntriesRef = useRef(getEntries);
+  getEntriesRef.current = getEntries;
+
+  useSubscription(contextIds, () => {
+    getEntriesRef.current();
+  });
 
   const doLogout = useCallback(() => {
-    // Manually clear all auth state to avoid window.location.reload() which
-    // reloads the current page (e.g., /home) instead of navigating to root.
-    // This prevents the redirect loop that happens in production.
-    clearAccessToken();
-    clearApplicationId();
-    clearContextId();
-    clearExecutorPublicKey();
-    localStorage.removeItem('calimero-application-id');
-
-    // Use replace instead of reload to ensure we navigate to root path
-    // This prevents the redirect loop that happens when reload() keeps the current path
+    logout();
     window.location.replace('/');
-  }, []);
+  }, [logout]);
 
   return (
     <>
       <MeroNavbar variant="elevated" size="md">
         <NavbarBrand text="KV Store" />
         <NavbarMenu align="center">
-          {currentContext && (
+          {contextId && (
             <div
               style={{
                 display: 'flex',
@@ -217,47 +177,56 @@ export default function HomePage() {
                 justifyContent: 'center',
               }}
             >
-              <div
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              >
-                <Text size="sm" color="muted">
-                  Node:
-                </Text>
-                <Text
-                  size="sm"
-                  style={{ fontFamily: 'monospace', color: '#e5e7eb' }}
+              {nodeUrl && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
                 >
-                  {currentContext.nodeUrl
-                    .replace('http://', '')
-                    .replace('https://', '')}
-                </Text>
-                <CopyToClipboard
-                  text={currentContext.nodeUrl}
-                  variant="icon"
-                  size="small"
-                  successMessage="Node URL copied!"
-                />
-              </div>
-              <div
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              >
-                <Text size="sm" color="muted">
-                  App ID:
-                </Text>
-                <Text
-                  size="sm"
-                  style={{ fontFamily: 'monospace', color: '#e5e7eb' }}
+                  <Text size="sm" color="muted">
+                    Node:
+                  </Text>
+                  <Text
+                    size="sm"
+                    style={{ fontFamily: 'monospace', color: '#e5e7eb' }}
+                  >
+                    {nodeUrl.replace('http://', '').replace('https://', '')}
+                  </Text>
+                  <CopyToClipboard
+                    text={nodeUrl}
+                    variant="icon"
+                    size="small"
+                    successMessage="Node URL copied!"
+                  />
+                </div>
+              )}
+              {applicationId && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
                 >
-                  {currentContext.applicationId.slice(0, 8)}...
-                  {currentContext.applicationId.slice(-8)}
-                </Text>
-                <CopyToClipboard
-                  text={currentContext.applicationId}
-                  variant="icon"
-                  size="small"
-                  successMessage="Application ID copied!"
-                />
-              </div>
+                  <Text size="sm" color="muted">
+                    App ID:
+                  </Text>
+                  <Text
+                    size="sm"
+                    style={{ fontFamily: 'monospace', color: '#e5e7eb' }}
+                  >
+                    {applicationId.slice(0, 8)}...{applicationId.slice(-8)}
+                  </Text>
+                  <CopyToClipboard
+                    text={applicationId}
+                    variant="icon"
+                    size="small"
+                    successMessage="Application ID copied!"
+                  />
+                </div>
+              )}
               <div
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               >
@@ -268,11 +237,10 @@ export default function HomePage() {
                   size="sm"
                   style={{ fontFamily: 'monospace', color: '#e5e7eb' }}
                 >
-                  {currentContext.contextId.slice(0, 8)}...
-                  {currentContext.contextId.slice(-8)}
+                  {contextId.slice(0, 8)}...{contextId.slice(-8)}
                 </Text>
                 <CopyToClipboard
-                  text={currentContext.contextId}
+                  text={contextId}
                   variant="icon"
                   size="small"
                   successMessage="Context ID copied!"
@@ -292,12 +260,9 @@ export default function HomePage() {
             </Menu>
           ) : (
             <NavbarItem>
-              <CalimeroConnectButton
-                connectionType={{
-                  type: ConnectionType.Custom,
-                  url: 'http://node1.127.0.0.1.nip.io',
-                }}
-              />
+              <Button variant="primary" onClick={() => navigate('/')}>
+                Connect
+              </Button>
             </NavbarItem>
           )}
         </NavbarMenu>
@@ -315,10 +280,7 @@ export default function HomePage() {
           maxWidth="100%"
           justify="center"
           align="center"
-          style={{
-            minHeight: '100vh',
-            padding: '2rem',
-          }}
+          style={{ minHeight: '100vh', padding: '2rem' }}
         >
           <GridItem>
             <main
@@ -384,20 +346,14 @@ export default function HomePage() {
                         <Button
                           type="submit"
                           variant="success"
-                          style={{
-                            flex: 1,
-                            minHeight: '3rem',
-                          }}
+                          style={{ flex: 1, minHeight: '3rem' }}
                         >
                           {translations.home.setEntry}
                         </Button>
                         <Button
                           variant="error"
                           onClick={resetEntries}
-                          style={{
-                            flex: 1,
-                            minHeight: '3rem',
-                          }}
+                          style={{ flex: 1, minHeight: '3rem' }}
                         >
                           {translations.home.resetEntries}
                         </Button>
@@ -452,9 +408,7 @@ export default function HomePage() {
                           zebra
                           compact
                           stickyHeader
-                          style={{
-                            minWidth: '100%',
-                          }}
+                          style={{ minWidth: '100%' }}
                         />
                       </div>
                     )}
